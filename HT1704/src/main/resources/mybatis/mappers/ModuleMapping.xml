@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.tarena.ht.mapper.ModuleMapper">
+	<select id="findAll" resultMap="ModuleRM">
+		select * from
+		module_p m
+		left join
+
+		(select module_id p_id,name p_name from module_p) p
+
+		on
+		m.parent_id=p.p_id
+		order by order_no
+	</select>
+	<resultMap type="Module" id="ModuleRM" autoMapping="true">
+		<id column="module_id" property="moduleId" />
+		<association property="parentModule" javaType="Module">
+			<id property="moduleId" column="p_id"></id>
+			<result column="p_name" property="name" />
+		</association>
+	</resultMap>
+	<update id="updateState">
+		update module_p set state=#{state}
+		where module_id in(
+		<foreach collection="moduleIds" item="moduleId" separator=",">
+			#{moduleId}
+		</foreach>
+		)
+	</update>
+	<delete id="deleteModule">
+		delete from module_p where module_id in(
+		<foreach collection="array" item="moduleId" separator=",">
+			#{moduleId}
+		</foreach>
+		)
+
+	</delete>
+	<insert id="saveModule">
+		insert into module_p values(
+		#{moduleId},
+		#{parentModule.moduleId},
+		#{name},
+		#{ctype},
+		#{state},
+		#{orderNo},
+		#{remark},
+		#{createBy,jdbcType=VARCHAR},
+		#{createDept,jdbcType=VARCHAR},
+		#{createTime,jdbcType=DATE},
+		#{updateBy,jdbcType=VARCHAR},
+		#{updateTime,jdbcType=DATE}
+		)
+
+	</insert>
+	<select id="findOne" resultMap="ModuleRM">
+		select * from
+		(select * from module_p where module_id=#{moduleId}) m
+		left join
+
+		(select module_id p_id,name p_name from module_p) p
+
+		on m.parent_id=p.p_id
+
+
+	</select>
+	<update id="updateModule">
+		update module_p set
+		parent_id=#{parentModule.moduleId},
+		name=#{name},
+		ctype=#{ctype},
+		state=#{state},
+		order_no=#{orderNo},
+		remark=#{remark}, 
+		update_by=#{updateBy,jdbcType=VARCHAR},
+		update_time=#{updateTime,jdbcType=DATE}
+		where module_id=#{moduleId} 
+	</update>
+	
+</mapper>

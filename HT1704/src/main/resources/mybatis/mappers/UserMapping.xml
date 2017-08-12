@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.tarena.ht.mapper.UserMapper">
+	<select id="findAll" resultMap="userRM">
+		select * from
+		(
+		select * from
+		user_p p
+		left join
+		(
+		select
+		user_info_id,name,card_no,manager_id,join_date,salary,birthday,gender,station,telephone,user_level,remark,order_no,p.m_id,p.m_name
+		from
+		user_info_p m
+		left join
+		(select user_info_id m_id,name m_name from
+		user_info_p ) p
+		on m.manager_id=p.m_id) info
+		on
+		p.user_id=info.user_info_id) d
+		left join
+		(select dept_id d_id ,dept_name
+		d_name from dept_p) t
+		on d.dept_id=t.d_id
+
+	</select>
+	<resultMap type="User" id="userRM" autoMapping="true">
+		<!--主对象封装 -->
+		<id column="user_id" property="userId" />
+		<!--部门封装 -->
+		<association property="dept" javaType="Dept">
+			<id column="d_id" property="deptId" />
+			<result column="d_name" property="deptName" />
+		</association>
+		<!-- 用户信息封装 -->
+		<association property="userInfo" javaType="UserInfo">
+			<id column="user_info_id" property="userInfoId" />
+			<result column="name" property="name" />
+			<result column="card_no" property="cardNo" />
+			<result column="join_date" property="joinDate" />
+			<result column="salary" property="salary" />
+			<result column="birthday" property="birthday" />
+			<result column="gender" property="gender" />
+			<result column="station" property="station" />
+			<result column="telephone" property="telephone" />
+			<result column="user_level" property="userLevel" />
+			<result column="remark" property="remark" />
+			<result column="order_no" property="orderNo" />
+			<!-- 上级部门封装 -->
+			<association property="manager" javaType="UserInfo">
+				<id column="m_id" property="userInfoId" />
+				<id column="m_name" property="name" />
+			</association>
+		</association>
+	</resultMap>
+
+	<update id="updateState">
+		update user_p set state =#{state}
+		where user_id in(
+		<foreach collection="userIds" item="userId" separator=",">
+			#{userId}
+		</foreach>
+		)
+	</update>
+	<delete id="deleteUser">
+		delete from user_p where user_id in(
+		<foreach collection="array" item="userId" separator=",">
+			#{userId}
+		</foreach>
+		)
+
+	</delete>
+	<insert id="saveUser">
+		insert into user_p values(
+		#{userId},
+		#{dept.deptId},
+		#{username},
+		#{password},
+		#{state},
+		#{createBy,jdbcType=VARCHAR},
+		#{createDept,jdbcType=VARCHAR},
+		#{createTime,jdbcType=DATE},
+		#{updateBy,jdbcType=VARCHAR},
+		#{updateTime,jdbcType=DATE}
+		)
+
+	</insert>
+	<select id="findOne" resultMap="userRM">
+		select * from
+		(
+		select * from
+		(select * from user_p where user_id=#{userId}) p
+		left join
+		(
+		select
+		user_info_id,name,card_no,manager_id,join_date,salary,birthday,gender,station,telephone,user_level,remark,order_no,p.m_id,p.m_name
+		from
+		user_info_p m
+		left join
+		(select user_info_id m_id,name m_name from user_info_p ) p
+		on m.manager_id=p.m_id) info
+		on p.user_id=info.user_info_id) d
+		left join
+		(select dept_id d_id ,dept_name d_name from dept_p) t
+		on d.dept_id=t.d_id
+	</select>
+	<update id="updateUser">
+		update user_p set		
+		dept_id=#{dept.deptId},
+		username=#{username},
+		password=#{password},
+		state=#{state},		
+		update_by=#{updateBy,jdbcType=VARCHAR},
+		update_time=#{updateTime,jdbcType=DATE} 
+		where user_id=#{userId}
+	</update>
+</mapper>
